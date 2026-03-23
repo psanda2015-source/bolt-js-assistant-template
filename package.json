@@ -1,38 +1,16 @@
 {
-  "name": "bolt-js-ai-agent-template",
+  "name": "psa-slack-bot",
   "version": "1.0.0",
-  "description": "A template for building AI-enabled Slack apps",
+  "description": "PSA Agent Gateway Slack bot - thin relay from Slack to gateway agents",
   "type": "module",
   "main": "app.js",
   "scripts": {
-    "check": "npx tsc --checkJs --noEmit --esModuleInterop --target esnext --module nodenext --moduleResolution nodenext app.js",
-    "start": "node app.js",
-    "lint": "npx @biomejs/biome check *.js agent/ listeners/",
-    "lint:fix": "npx @biomejs/biome check --write *.js agent/ listeners/"
+    "start": "node app.js"
   },
-  "author": "Slack Technologies, LLC",
+  "author": "Pro Security & Automation",
   "license": "MIT",
-  "keywords": [
-    "slack",
-    "bolt",
-    "slackapi"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/slack-samples/bolt-js-assistant-template.git"
-  },
-  "bugs": {
-    "url": "https://github.com/slack-samples/bolt-js-assistant-template/issues"
-  },
   "dependencies": {
     "@slack/bolt": "^4.6.0",
-    "dotenv": "~17.3.1",
-    "openai": "^6.25.0"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.4.5",
-    "@slack/cli-hooks": "^1.2.1",
-    "@types/node": "^25.3.3",
-    "typescript": "^5.9.3"
+    "dotenv": "~17.3.1"
   }
 }

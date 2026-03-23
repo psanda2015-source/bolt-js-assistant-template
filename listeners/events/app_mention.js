@@ -1,55 +1,36 @@
-import { callLLM } from '../../agent/llm-caller.js';
-import { feedbackBlock } from '../views/feedback_block.js';
+import { relayToGateway, resolveAgent } from '../../agent/gateway-relay.js';
 
 /**
- * Handles the event when the app is mentioned in a Slack conversation
- * and generates an AI response.
- *
- * @param {Object} params
- * @param {import("@slack/types").AppMentionEvent} params.event - The app mention event.
- * @param {import("@slack/web-api").WebClient} params.client - Slack web client.
- * @param {import("@slack/logger").Logger} params.logger - Logger instance.
- * @param {import("@slack/bolt").SayFn} params.say - Function to send messages.
- *
- * @see {@link https://docs.slack.dev/reference/events/app_mention/}
+ * Handles @mentions in channels — relays to PSA Agent Gateway.
+ * Routes to the agent mapped to this channel (or default agent).
  */
 export const appMentionCallback = async ({ event, client, logger, say }) => {
   try {
     const { channel, text, team, user } = event;
     const thread_ts = event.thread_ts || event.ts;
 
+    const agentId = resolveAgent(channel);
+
     await client.assistant.threads.setStatus({
       channel_id: channel,
-      thread_ts: thread_ts,
-      status: 'thinking...',
-      loading_messages: [
-        'Teaching the hamsters to type faster…',
-        'Untangling the internet cables…',
-        'Consulting the office goldfish…',
-        'Polishing up the response just for you…',
-        'Convincing the AI to stop overthinking…',
-      ],
+      thread_ts,
+      status: `connecting to ${agentId}...`,
     });
 
     const streamer = client.chatStream({
-      channel: channel,
+      channel,
       recipient_team_id: team,
       recipient_user_id: user,
-      thread_ts: thread_ts,
+      thread_ts,
     });
 
-    const prompts = [
-      {
-        role: 'user',
-        content: text,
-      },
-    ];
+    // Strip the bot mention from the message text
+    const cleanText = text.replace(/<@[A-Z0-9]+>/g, '').trim();
 
-    await callLLM(streamer, prompts);
-
-    await streamer.stop({ blocks: [feedbackBlock] });
+    await relayToGateway(streamer, cleanText, agentId, thread_ts, user);
+    await streamer.stop();
   } catch (e) {
-    logger.error(`Failed to handle a user message event: ${e}`);
-    await say(`:warning: Something went wrong! (${e})`);
+    logger.error(`Failed to handle app mention: ${e}`);
+    await say(`:warning: Something went wrong! (${e.message || e})`);
   }
 };
