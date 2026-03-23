@@ -1,22 +1,21 @@
 import { relayToGateway, resolveAgent } from '../../agent/gateway-relay.js';
 
-/**
- * Handles user messages in assistant threads — relays to PSA Agent Gateway.
- */
 export const message = async ({ client, context, logger, message, say, setStatus }) => {
+  console.log('>>> MESSAGE RECEIVED:', JSON.stringify({ text: message.text, thread_ts: message.thread_ts, channel: message.channel }));
+
   if (!('text' in message) || !('thread_ts' in message) || !message.text || !message.thread_ts) {
+    console.log('>>> SKIPPING: missing text or thread_ts');
     return;
   }
 
   try {
     const { channel, thread_ts } = message;
     const { userId, teamId } = context;
-
     const agentId = resolveAgent(channel);
 
-    await setStatus({
-      status: `connecting to ${agentId}...`,
-    });
+    console.log(`>>> ROUTING to ${agentId} for user ${userId}`);
+
+    await setStatus({ status: `connecting to ${agentId}...` });
 
     const streamer = client.chatStream({
       channel,
@@ -28,8 +27,9 @@ export const message = async ({ client, context, logger, message, say, setStatus
 
     await relayToGateway(streamer, message.text, agentId, thread_ts, userId);
     await streamer.stop();
+    console.log('>>> RELAY COMPLETE');
   } catch (e) {
-    logger.error(`Failed to relay message to gateway: ${e}`);
+    console.error('>>> RELAY ERROR:', e);
     await say(`:warning: Something went wrong! (${e.message || e})`);
   }
 };
