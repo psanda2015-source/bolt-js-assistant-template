@@ -23,6 +23,7 @@ export const message = async ({ client, context, logger, message, say, setStatus
       recipient_team_id: teamId,
       recipient_user_id: userId,
       thread_ts,
+      task_display_mode: 'timeline',
     });
 
     await relayToGateway(streamer, message.text, agentId, thread_ts, userId);

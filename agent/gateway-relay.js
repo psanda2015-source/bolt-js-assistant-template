@@ -85,7 +85,7 @@ export async function relayToGateway(streamer, message, agentId, conversationId,
           if (currentEvent === 'text_delta' && data) {
             fullText += data;
             await streamer.append({
-              markdown_text: data,
+              chunks: [{ type: 'markdown_text', text: data }],
             });
           }
           // tool_call and tool_result events are handled silently
@@ -100,7 +100,7 @@ export async function relayToGateway(streamer, message, agentId, conversationId,
 
   if (!fullText) {
     await streamer.append({
-      markdown_text: '_No response from agent._',
+      chunks: [{ type: 'markdown_text', text: '_No response from agent._' }],
     });
   }
 }
